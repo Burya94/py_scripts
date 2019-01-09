@@ -7,6 +7,7 @@ from pytz import timezone
 import csv
 from botocore import exceptions
 
+ACC_ID=''
 
 def describe_snapshots():
     snapshots_ids = {}
@@ -21,7 +22,7 @@ def describe_snapshots():
             }
         ],
         OwnerIds=[
-            '',
+            ACC_IDs,
         ]
     )
     for page in responce:
@@ -31,6 +32,7 @@ def describe_snapshots():
                 snapshots_ids[snapshot['SnapshotId']]['StartedTime'] = snapshot['StartTime']
                 snapshots_ids[snapshot['SnapshotId']]['Description'] = snapshot['Description']
                 snapshots_ids[snapshot['SnapshotId']]['Size'] = snapshot['VolumeSize']
+    print(len(snapshots_ids))
     return snapshots_ids
 
 
@@ -42,6 +44,7 @@ def create_report(snapshots_dict, profile, region):
                             'Description',
                             'Size'])
         for id in snapshots_dict.keys():
+            print()
             report.writerow([id,
                              snapshots_dict[id]['StartedTime'],
                              snapshots_dict[id]['Description'],
@@ -75,18 +78,18 @@ def main():
         exit(1)
     global ec2
     global date
-     date = datetime.strptime(options.DATE, "%d-%m-%Y")
-     date = date.replace(tzinfo=timezone('UTC'))
-     session = boto3.Session(region_name=options.REGION, profile_name=options.PROFILE)
-     ec2 = session.client('ec2')
-     print("Searching for old snapshots...")
-     old_snapshots = describe_snapshots()
-     print("Deleting all old snapshots...")
-     delete_snapshot(old_snapshots)
+    date = datetime.strptime(options.DATE, "%d-%m-%Y")
+    date = date.replace(tzinfo=timezone('UTC'))
+    session = boto3.Session(region_name=options.REGION, profile_name=options.PROFILE)
+    ec2 = session.client('ec2')
+    print("Searching for old snapshots...")
+    old_snapshots = describe_snapshots()
+    print("Deleting all old snapshots...")
+    delete_snapshot(old_snapshots)
     ##
     ## update to handle snapshots that can't be deleted in report file
-     print("Creating report...")
-     create_report(old_snapshots, options.PROFILE, options.REGION)
+    print("Creating report...")
+    create_report(old_snapshots, options.PROFILE, options.REGION)
 
 
 
